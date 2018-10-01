@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Our simple HTTP server</title>
+  <link rel="stylesheet" type="text/css" href="/style.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+  <script type="text/babel">
+  
+  /*
+    const parseJSON = (xhr, content) => {
+          const obj = JSON.parse(xhr.response);
+          console.dir(obj);
+        };*/
+
+    const handleResponse = (xhr, parseResponse) => {
+      const content = document.querySelector('#content');
+      const articles = document.querySelector('#articles');
+
+      if(parseResponse && (xhr.response!="")){
+        const obj = JSON.parse(xhr.response);
+        console.dir(obj);
+      } else{
+        console.log('recieved');
+      }
+      //console.dir(JSON.parse(xhr.response).content);
+      const users = JSON.parse(xhr.response).content.users;
+      switch(xhr.status){
+        case 200:
+          content.innerHTML = '<b>Success</b>';
+          break
+        case 201:
+          //articles.innerHTML += `<b>${JSON.parse(xhr.response).content.users}</b>`;
+          articles.innerHTML = "";
+          for (var key in users){
+            articles.innerHTML +=`
+            <div id="article" class="flex-item">
+            <h3>${users[key].name}</h3>
+            <p>${users[key].age}</p>
+            </div>`;
+          }
+          content.innerHTML = '<b>Created</b>'; 
+          break;
+        case 204:
+          content.innerHTML = '<b>updated (no content)</b>';
+          break;
+        case 400:
+          content.innerHTML = '<b>bad request</b>';
+          break;
+        case 404: 
+          content.innerHTML = `<b>Resource Not Found</b>`;
+          break;
+        default:
+          content.innerHTML = '<b> error code not implemented by client </b>';
+      }
+      if(xhr.response!=""){
+        content.innerHTML+=`<p>${JSON.parse(xhr.response).message}</p>`;
+      }
+    };
+
+    const sendPost = (e, nameForm) => {
+      const nameAction = nameForm.getAttribute('action');
+      const nameMethod = nameForm.getAttribute('method');
+      const nameField = nameForm.querySelector('#nameField');
+      const ageField = nameForm.querySelector('#ageField');
+
+      const xhr = new XMLHttpRequest();
+      xhr.open(nameMethod, nameAction);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.setRequestHeader('Accept', 'application/json');
+
+      xhr.onload = () => handleResponse(xhr, true);
+      
+      const formData = `name=${nameField.value}&age=${ageField.value}`;
+
+      xhr.send(formData);
+
+      e.preventDefault();
+      return false;
+
+    };
+
+    const sendGet = (e, userForm) => {
+      console.log('sendGEt');
+      const nameAction = userForm.getAttribute('action');
+      const nameMethod = userForm.getAttribute('method');
+
+      const urlField = userForm.querySelector('#urlField').value;
+      const methodSelect = userForm.querySelector('#methodSelect').value;
+      //const method = nameForm.querySelector('#methodSelect').value;
+
+      const xhr = new XMLHttpRequest();
+      xhr.open(nameMethod, urlField);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.setRequestHeader('Accept', 'application/json');
+
+      //xhr.onload = () => handleResponse(xhr, true);
+
+      //if get request or head request
+      console.log('urlfield:'+urlField);
+      //console.log(urlField);
+      if(methodSelect == 'get') {
+        xhr.onload = () => handleResponse(xhr, true);
+      } else {
+        xhr.onload = () => handleResponse(xhr, false);
+      }
+
+      //const formData = `name=${nameField.value}&age=${ageField.value}`;
+      console.dir(xhr);
+      xhr.send();
+
+      e.preventDefault();
+      return false;
+    };
+    
+
+    const init = () => {
+      const nameForm = document.querySelector('#nameForm');
+      const userForm = document.querySelector('#userForm');
+      
+      const addUser = (e) => sendPost(e, nameForm);
+      const getUsers = (e) => sendGet(e, userForm);
+      
+      nameForm.addEventListener('submit', addUser);
+      userForm.addEventListener('submit', getUsers);
+    };
+
+    window.onload = init;
+
+  </script>
+</head>
+<body>
+  <section id="top">
+    <h1 id="title">Good News</h1>
+    <div class="modal">
+      <form id="nameForm" action="/addUser" method="post" class="flex-container">
+        <div class="flex-item">
+          <label for="name">Title: </label>
+          <input id="nameField" type="text" name="name" />
+        </div>
+        <div class="flex-item">
+          <label for="age">Content: </label>
+          <input id="ageField" type="text" name="age" min="0" max="100" step="1"/>
+        </div>
+        <input type="submit" value="Create Article" />
+      </form>
+    </div>
+    <form id="userForm" action="/getUsers" method="get" style="display: none;">
+      <select id='urlField'>
+        <option value='/getUsers'>/getUsers</option>
+        <option value='/notReal'>/notReal</option>
+      </select>
+      <select id="methodSelect">
+        <option value="get">GET</option>
+        <option value="head">HEAD</option>
+      </select>
+      <input type="submit" value="Get User" />
+    </form>
+  </section>
+  <section id="content" style="display: none;">
+  </section>
+  <section id="articles" class="flex-container">
+  </section>
+</body>
+</html>

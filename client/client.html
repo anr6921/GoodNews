@@ -5,38 +5,37 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+  
   <script type="text/babel">
   
-  /*
-    const parseJSON = (xhr, content) => {
-          const obj = JSON.parse(xhr.response);
-          console.dir(obj);
-        };*/
-
+    // Handle response recieved from sent functions
     const handleResponse = (xhr, parseResponse) => {
       const content = document.querySelector('#content');
       const articles = document.querySelector('#articles');
 
+      // if response is GET or POST and has xhr.response value,
+      // parse and print response
       if(parseResponse && (xhr.response!="")){
         const obj = JSON.parse(xhr.response);
         console.dir(obj);
-      } else{
+      } else{ // HEAD request
         console.log('recieved');
       }
-      //console.dir(JSON.parse(xhr.response).content);
+     
       const users = JSON.parse(xhr.response).content.users;
       switch(xhr.status){
         case 200:
           content.innerHTML = '<b>Success</b>';
           break
         case 201:
-          //articles.innerHTML += `<b>${JSON.parse(xhr.response).content.users}</b>`;
           articles.innerHTML = "";
           for (var key in users){
             articles.innerHTML +=`
-            <div id="article" class="flex-item">
-            <h3>${users[key].name}</h3>
-            <p>${users[key].age}</p>
+            <div class="article flex-item">
+              <div class="article-content">
+                <h3>${users[key].name}</h3>
+                <p>${users[key].age}</p>
+              </div>
             </div>`;
           }
           content.innerHTML = '<b>Created</b>'; 
@@ -80,8 +79,8 @@
 
     };
 
+    // Calls handleResponse method as GET request (TRUE) or HEAD request (FALSE)
     const sendGet = (e, userForm) => {
-      console.log('sendGEt');
       const nameAction = userForm.getAttribute('action');
       const nameMethod = userForm.getAttribute('method');
 
@@ -94,18 +93,13 @@
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.setRequestHeader('Accept', 'application/json');
 
-      //xhr.onload = () => handleResponse(xhr, true);
-
-      //if get request or head request
-      console.log('urlfield:'+urlField);
-      //console.log(urlField);
+      // Determine if request is GET or HEAD, handle response
       if(methodSelect == 'get') {
         xhr.onload = () => handleResponse(xhr, true);
       } else {
         xhr.onload = () => handleResponse(xhr, false);
       }
 
-      //const formData = `name=${nameField.value}&age=${ageField.value}`;
       console.dir(xhr);
       xhr.send();
 
@@ -114,6 +108,7 @@
     };
     
 
+    // Add event listeners to form elements on page initialization
     const init = () => {
       const nameForm = document.querySelector('#nameForm');
       const userForm = document.querySelector('#userForm');
@@ -132,6 +127,7 @@
 <body>
   <section id="top">
     <h1 id="title">Good News</h1>
+    
     <div class="modal">
       <form id="nameForm" action="/addUser" method="post" class="flex-container">
         <div class="flex-item">
@@ -161,5 +157,13 @@
   </section>
   <section id="articles" class="flex-container">
   </section>
+  <div id="like_button_container"></div>
+   <!--React-->
+   <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+   <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+ 
+   <!--React Components-->
+   <script type="text/jsx" src="./article.js"></script>
+
 </body>
 </html>

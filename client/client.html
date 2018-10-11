@@ -12,23 +12,27 @@
     const handleResponse = (xhr, parseResponse) => {
       const content = document.querySelector('#content');
       const articles = document.querySelector('#articles');
+      const warning = document.querySelector('#nameForm-warning');
 
       // if response is GET or POST and has xhr.response value,
       // parse and print response
       if(parseResponse && (xhr.response!="")){
+        warning.innerHTML = "";
         const obj = JSON.parse(xhr.response);
         console.dir(obj);
       } else{ // HEAD request
         console.log('recieved');
+        warning.innerHTML = "<p>An article with this title already exsists.</p>"
       }
      
-      const users = JSON.parse(xhr.response).content.users;
+      
       switch(xhr.status){
         case 200:
           content.innerHTML = '<b>Success</b>';
           break
         case 201:
           articles.innerHTML = "";
+          const users = JSON.parse(xhr.response).content.users;
           for (var key in users){
             articles.innerHTML +=`
             <div class="article flex-item">
@@ -44,6 +48,7 @@
           content.innerHTML = '<b>updated (no content)</b>';
           break;
         case 400:
+          warning.innerHTML = '<p>Missing required information</p>'
           content.innerHTML = '<b>bad request</b>';
           break;
         case 404: 
@@ -81,10 +86,10 @@
 
     // Calls handleResponse method as GET request (TRUE) or HEAD request (FALSE)
     const sendGet = (e, userForm) => {
-      const nameAction = userForm.getAttribute('action');
-      const nameMethod = userForm.getAttribute('method');
+      //const nameAction = userForm.getAttribute('action');
+      //const nameMethod = userForm.getAttribute('method');
 
-      const urlField = userForm.querySelector('#urlField').value;
+      const urlField = "/getUsers";//userForm.querySelector('#urlField').value;
       const methodSelect = userForm.querySelector('#methodSelect').value;
       //const method = nameForm.querySelector('#methodSelect').value;
 
@@ -114,10 +119,12 @@
       const userForm = document.querySelector('#userForm');
       
       const addUser = (e) => sendPost(e, nameForm);
-      const getUsers = (e) => sendGet(e, userForm);
+      //const getUsers = (e) => sendGet(e, userForm);
+      const loadArticles = (e) =>sendGet(e, nameForm);
       
       nameForm.addEventListener('submit', addUser);
       userForm.addEventListener('submit', getUsers);
+      nameForm.addEventListener('load', loadArticles);
     };
 
     window.onload = init;
@@ -127,19 +134,26 @@
 <body>
   <section id="top">
     <h1 id="title">Good News</h1>
-    
-    <div class="modal">
-      <form id="nameForm" action="/addUser" method="post" class="flex-container">
-        <div class="flex-item">
-          <label for="name">Title: </label>
-          <input id="nameField" type="text" name="name" />
-        </div>
-        <div class="flex-item">
-          <label for="age">Content: </label>
-          <input id="ageField" type="text" name="age" min="0" max="100" step="1"/>
-        </div>
-        <input type="submit" value="Create Article" />
-      </form>
+    <a href="#create-article">
+      <button id="create-article-button">Create Article</button>
+    </a>
+    <div id="create-article" class="overlay">
+      <div  class="modal">
+        <a class="close" href="#">&times;</a>
+        <form id="nameForm" action="/addUser" method="post" class="flex-container">
+          <div class="flex-item">
+            <label for="name">Title: </label>
+            <input id="nameField" type="text" name="name" />
+          </div>
+          <div class="flex-item">
+            <label for="age">Content: </label>
+            <input id="ageField" type="text" name="age" min="0" max="100" step="1"/>
+          </div>
+          <div id="nameForm-warning" class="flex-item"></div>
+          <div class="flex-item"><input type="submit" value="Create Article" /></div>
+         <!-- <div class="flex-item"></div><input type="load" value="Load Articles" /></div>-->
+        </form>
+      </div>
     </div>
     <form id="userForm" action="/getUsers" method="get" style="display: none;">
       <select id='urlField'>
@@ -150,7 +164,7 @@
         <option value="get">GET</option>
         <option value="head">HEAD</option>
       </select>
-      <input type="submit" value="Get User" />
+      <!--<input type="submit" value="Get User" />-->
     </form>
   </section>
   <section id="content" style="display: none;">
